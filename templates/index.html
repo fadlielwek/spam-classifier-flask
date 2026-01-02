@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+    <div class="w-full max-w-2xl p-8 bg-white rounded-2xl shadow-xl">
+        <h1 class="mb-6 text-center text-2xl font-bold text-blue-600">
+            Email Spam Prediction
+        </h1>
+
+        <div class="space-y-4">
+            <textarea id="email" rows="4" placeholder="Enter your email or a long sentence..." class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg
+                       focus:outline-none focus:ring-2 focus:ring-blue-300
+                       focus:border-transparent resize-none"></textarea>
+
+            <button id="predictBtn" class="w-full px-6 py-4 bg-gradient-to-r from-blue-400 to-purple-400
+                       text-white rounded-lg hover:from-blue-500 hover:to-purple-500
+                       transition-all shadow-lg hover:shadow-xl">
+                Predict
+            </button>
+        </div>
+
+        <div id="result" class="mt-4 text-center text-xl font-bold"></div>
+    </div>
+
+    <script>
+        const predictBtn = document.getElementById("predictBtn");
+        const emailInput = document.getElementById("email");
+        const resultDiv = document.getElementById("result");
+
+        predictBtn.addEventListener("click", async () => {
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                resultDiv.innerHTML = "Email tidak boleh kosong";
+                return;
+            }
+
+            resultDiv.innerHTML = "Processing...";
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+
+                if (data.prediction) {
+                    resultDiv.innerHTML = `
+                        <span class="${data.prediction.toLowerCase() === "spam"
+                            ? "text-red-600"
+                            : "text-green-600"
+                        }">
+                            ${data.prediction.toUpperCase()}
+                        </span>
+                        <div class="text-base font-medium">
+                            Confidence: ${data.confidence}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = "Gagal memprediksi";
+                }
+            } catch (error) {
+                console.error(error);
+                resultDiv.innerHTML = "Gagal memprediksi";
+            }
+        });
+    </script>
+</body>
+
+</html>
